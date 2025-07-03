@@ -29,7 +29,6 @@
     # This image is often more stable for Cloud Build operations.
     - name: 'gcr.io/cloud-builders/gcloud' # CHANGED THIS LINE
       args:
-        - 'gcloud'
         - 'run'
         - 'deploy'
         - 'greencloud-nodejs-api-service' # Your Cloud Run service name
