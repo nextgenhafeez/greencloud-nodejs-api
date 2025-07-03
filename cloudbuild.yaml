@@ -1,0 +1,60 @@
+# This file defines the CI/CD pipeline for your Node.js application on Google Cloud Build.
+
+steps:
+# Step 1: Build the Docker image
+# Uses the 'cloud-build-local' builder to build the Docker image.
+# The image is tagged with the Artifact Registry path and a unique build ID.
+- name: 'gcr.io/cloud-builders/docker'
+  args:
+    - 'build'
+    - '-t'
+    - 'gcr.io/${PROJECT_ID}/greencloud-nodejs-app:${_TAG_NAME}' # Tag with project ID and custom tag
+    - '.' # Build context is the current directory
+  id: Build
+
+# Step 2: Push the Docker image to Google Artifact Registry
+# Pushes the newly built image to your Artifact Registry repository.
+- name: 'gcr.io/cloud-builders/docker'
+  args:
+    - 'push'
+    - 'gcr.io/${PROJECT_ID}/greencloud-nodejs-app:${_TAG_NAME}'
+  id: Push
+
+# Step 3: Deploy the image to Cloud Run
+# Deploys the Docker image to your Cloud Run service.
+# It uses the same environment variables and secret setup as your manual deployment.
+# Note: --vpc-connector and --connectivity=internal are removed as they are not
+# supported for fully managed Cloud Run with public MongoDB endpoint.
+- name: 'gcr.io/google.com/cloudsdk/cloud-sdk'
+  args:
+    - 'gcloud'
+    - 'run'
+    - 'deploy'
+    - 'greencloud-nodejs-api-service' # Your Cloud Run service name
+    - '--image'
+    - 'gcr.io/${PROJECT_ID}/greencloud-nodejs-app:${_TAG_NAME}' # Image from previous step
+    - '--platform'
+    - 'managed'
+    - '--region'
+    - 'us-central1' # Your Cloud Run service region
+    - '--allow-unauthenticated' # Allow public access
+    - '--set-env-vars'
+    - 'MONGO_USERNAME=nextgenhafeez,MONGO_HOST=greencloud-nodejs-api-d.hbjkcdg.mongodb.net,MONGO_DB_NAME=node-aws-fargate-app,JWT_SECRET=${_JWT_SECRET}' # Environment variables
+    - '--set-secrets'
+    - 'MONGO_PASSWORD=mongodb-password:latest' # Securely fetch password from Secret Manager
+    - '--project'
+    - '${PROJECT_ID}' # Your Google Cloud Project ID
+  id: Deploy
+  # This step needs permissions to deploy to Cloud Run and access Secret Manager.
+  # These permissions will be granted to the Cloud Build service account in the next step.
+
+# Substitutions allow you to pass dynamic values to the build.
+# Here, we define a default tag name (using a timestamp) and JWT_SECRET.
+substitutions:
+  _TAG_NAME: 'v1.0.${BUILD_ID}' # Example: v1.0.1234567890 (using Cloud Build's unique ID)
+  _JWT_SECRET: '8q0Io9a00dzjm8Xi5Jo0Tzjk6VVbDMm6ULbYO9XztCI=' # Your generated JWT_SECRET
+  # IMPORTANT: Ensure the JWT_SECRET value above is correct and matches what you generated.
+
+# The images produced by the build are stored in Artifact Registry.
+images:
+- 'gcr.io/${PROJECT_ID}/greencloud-nodejs-app:${_TAG_NAME}'
