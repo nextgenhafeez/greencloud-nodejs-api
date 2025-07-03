@@ -25,11 +25,9 @@
       id: Push
 
     # Step 3: Deploy the image to Cloud Run
-    # Deploys the Docker image to your Cloud Run service.
-    # It uses the same environment variables and secret setup as your manual deployment.
-    # Note: --vpc-connector and --connectivity=internal are removed as they are not
-    # supported for fully managed Cloud Run with public MongoDB endpoint.
-    - name: 'gcr.io/google.com/cloudsdk/cloud-sdk'
+    # IMPORTANT CHANGE: Using 'gcr.io/cloud-builders/gcloud' for the gcloud SDK builder.
+    # This image is often more stable for Cloud Build operations.
+    - name: 'gcr.io/cloud-builders/gcloud' # CHANGED THIS LINE
       args:
         - 'gcloud'
         - 'run'
@@ -50,7 +48,7 @@
         - '${PROJECT_ID}' # Your Google Cloud Project ID
       id: Deploy
       # This step needs permissions to deploy to Cloud Run and access Secret Manager.
-      # These permissions will be granted to the Cloud Build service account in the next step.
+      # These permissions should already be granted to the Cloud Build service account.
 
     # Substitutions allow you to pass dynamic values to the build.
     # Here, we define a default tag name (using a timestamp) and JWT_SECRET.
