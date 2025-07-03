@@ -21,4 +21,4 @@ app.get("/ping", (req, res) => {
 
 app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
 
-// Testing with Owner role for CI/CD
+// Testing with Owner roles for CI/CD
