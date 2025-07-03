@@ -21,4 +21,9 @@ app.get("/ping", (req, res) => {
 
 app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
 
-// Testing with Owner roles for CI/CD
+// This is a test comment for CI/CD
+console.log('App is starting...');
+
+const express = require('express');
+const app = express();
+// ... rest of your server.js code
