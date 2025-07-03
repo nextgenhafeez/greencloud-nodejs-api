@@ -21,4 +21,4 @@ app.get("/ping", (req, res) => {
 
 app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
 
-// This is a test comment for CI/CD
+// This is a test comment for CI/CD - final attempt with all permissions
