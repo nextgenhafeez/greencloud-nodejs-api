@@ -1,7 +1,6 @@
 # This cloudbuild.yaml file defines the steps for Google Cloud Build
 # to build your Docker image and deploy it to Google Cloud Run.
-# It now passes all MongoDB connection details as environment variables,
-# with the password securely fetched from Secret Manager.
+# It now includes explicit logging options within the build configuration.
 
 steps:
   # Step 1: Build the Docker image
@@ -25,14 +24,17 @@ steps:
     - '--port=8080' # Must match the port your Node.js app listens on
 
     # Set non-sensitive environment variables for MongoDB connection details and JWT Secret
-    # These will be directly available as process.env.MONGO_USERNAME, etc.
-    # Ensure MONGO_HOST is the full Atlas cluster URL, not 'mongo'.
     - '--set-env-vars=MONGO_USERNAME=nextgenhafeez,MONGO_HOST=greencloud-nodejs-api-d.hbjkcdg.mongodb.net,MONGO_DB_NAME=node-aws-fargate-app,MONGO_APP_NAME=GreenCloud-NodeJS-API-DB,JWT_SECRET=YOUR_PROD_JWT_SECRET' # Replace YOUR_PROD_JWT_SECRET with your actual secret value
 
     # Set sensitive environment variables from Secret Manager, specifying ':latest' version
-    # The MONGO_PASSWORD will be fetched securely from Secret Manager.
     - '--set-secrets=MONGO_PASSWORD=MONGO_PASSWORD:latest'
 
 images:
   # The image built by Cloud Build and pushed to GCR.
 - 'gcr.io/$PROJECT_ID/greencloud-nodejs-api-app:v1.0.1'
+
+# Explicitly set logging options for the build
+options:
+  logging: CLOUD_LOGGING_ONLY # This tells Cloud Build where to send logs for this specific build
+  # defaultLogsBucketBehavior: REGIONAL_USER_OWNED_BUCKET # Alternative if CLOUD_LOGGING_ONLY doesn't work
+
