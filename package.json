@@ -22,3 +22,13 @@
     "request": "^2.88.2"
   }
 }
+// ... (your existing code) ...
+
+// Correct way to get the port in Cloud Run
+const PORT = process.env.PORT || 8080; // Use Cloud Run's provided PORT, fallback to 8080 for local dev
+
+app.listen(PORT, () => {
+  console.log(`Server started on port ${PORT}`);
+});
+
+// ... (rest of your server.js code) ...

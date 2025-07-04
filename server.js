@@ -24,6 +24,6 @@ app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
 // This is a test comment for CI/CD
 console.log('App is starting...');
 
-const express = require('express');
-const app = express();
+// This is a test comment for CI/CD
+console.log('App is starting with updated Dockerfile!'); // Changed this line
 // ... rest of your server.js code
