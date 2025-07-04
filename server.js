@@ -27,3 +27,7 @@ app.listen(PORT, () => {
 app.get('/test', (req, res) => {
   res.send('Hello from the API! (Updated)'); // Changed message
 });
+// In server.js
+app.get('/test', (req, res) => {
+  res.send('Hello from the API! (CI/CD confirmed)'); // Changed message again
+});
