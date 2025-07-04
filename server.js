@@ -1,29 +1,29 @@
-const express = require("express");
-const connectDB = require("./config/db");
+// server.js
 
+const express = require('express');
 const app = express();
+const connectDB = require('./config/db'); // Import the connectDB function
+// const config = require('config'); // You might not even need this if all config is via process.env for prod
 
-// Connect Database
-connectDB();
+// Middleware
+app.use(express.json()); // Example: Body parser for JSON requests
 
-// Init Middleware
-app.use(express.json({ extended: false }));
+// Connect to MongoDB
+connectDB(); // Call the function to connect to the database
 
-// Define Routes
-app.use("/api/users", require("./routes/api/users"));
-app.use("/api/auth", require("./routes/api/auth"));
-
-const PORT = process.env.PORT || 3000;
-
-app.get("/ping", (req, res) => {
-  res.send("Pong!");
+// Define your routes here
+app.get('/test', (req, res) => {
+  res.send('Hello from the API!');
 });
 
-app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
+// ... (any other routes you have) ...
 
-// This is a test comment for CI/CD
-console.log('App is starting...');
-
-// This is a test comment for CI/CD
-console.log('App is starting with updated Dockerfile!'); // Changed this line
-// ... rest of your server.js code
+// Start the server
+const PORT = process.env.PORT || 8080;
+app.listen(PORT, () => {
+  console.log(`Server started on port ${PORT}`);
+});
+// In server.js
+app.get('/test', (req, res) => {
+  res.send('Hello from the API! (Updated)'); // Changed message
+});

@@ -1,0 +1,39 @@
+# This docker-compose.yml file defines a multi-service Docker application
+# for local development of your Node.js API.
+# It includes your Node.js application and a MongoDB database.
+
+services:
+  # Service for your Node.js API application
+  app:
+    build:
+      context: . # Build the image from the current directory (where Dockerfile is)
+      dockerfile: Dockerfile # Specify the Dockerfile to use
+    ports:
+      - "8080:8080" # Map host port 8080 to container port 8080
+    environment:
+      # Environment variables for your Node.js application
+      # These should match the variables used in your server.js and main.tf
+      PORT: 8080 # Your app will listen on this port inside the container
+      MONGO_USERNAME: nextgenhafeez # Your MongoDB username
+      MONGO_HOST: mongo # This refers to the 'mongo' service defined below
+      MONGO_DB_NAME: node-aws-fargate-app # Your MongoDB database name
+      MONGO_PASSWORD: local_dev_password # Use a simple password for local dev, NOT your production secret
+      JWT_SECRET: your_local_jwt_secret # Use a simple secret for local dev, NOT your production secret
+    depends_on:
+      - mongo # Ensure MongoDB starts before the app
+
+  # Service for the MongoDB database
+  mongo:
+    image: mongo:4.4 # Use a specific version of MongoDB
+    ports:
+      - "27017:27017" # Map host port 27017 to container port 27017
+    environment:
+      # MongoDB environment variables for initial setup (if needed)
+      MONGO_INITDB_ROOT_USERNAME: nextgenhafeez # Matches your app's username
+      MONGO_INITDB_ROOT_PASSWORD: local_dev_password # Matches your app's password
+    volumes:
+      - mongo-data:/data/db # Persist MongoDB data to a named volume
+
+# Define named volumes for data persistence
+volumes:
+  mongo-data: # This volume will store your MongoDB data

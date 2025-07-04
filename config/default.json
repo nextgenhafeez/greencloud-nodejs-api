@@ -1,0 +1,4 @@
+{
+  "mongoURI": "mongodb://nextgenhafeez:local_dev_password@mongo:27017/node-aws-fargate-app?authSource=admin",
+  "jwtSecret": "your_local_jwt_secret"
+}
