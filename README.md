@@ -1,83 +1,236 @@
-# AWS Fargate Node App
+GreenCloud Node.js API
+This repository contains the source code and infrastructure configurations for the GreenCloud Node.js API, deployed on Google Cloud Run with a Continuous Integration/Continuous Deployment (CI/CD) pipeline. It connects to a MongoDB Atlas database for data persistence.
 
-A reference project to deploy a Node Express app onto Amazon ECS on AWS Fargate with Terraform, inspired by [this](https://dev.to/txheo/a-guide-to-provisioning-aws-ecs-fargate-using-terraform-1joo) tutorial documentation
+Table of Contents
+Project Overview
 
-A microservice which creates, and authenticates users from a MongoDB database
+Local Development Setup
 
-![AWS Architecture](img/aws-node-ecs2.JPG)
+Cloud Deployment (Google Cloud Run)
 
-## Pre-requisite
+CI/CD Pipeline
 
-- Make sure you have installed [Terraform](https://learn.hashicorp.com/tutorials/terraform/install-cli), [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2-mac.html#cliv2-mac-prereq), and configured a `default` AWS CLI profile (see doc [here](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html#cli-configure-quickstart-profiles))
+Infrastructure-as-Code (Terraform)
 
-```bash
-terraform -help # prints Terraform options
-which aws # prints /usr/local/bin/aws
-aws --version # prints aws-cli/2.0.36 Python/3.7.4 Darwin/18.7.0 botocore/2.0.0
-aws configure # configure your AWS CLI profile
-```
+Monitoring & Alerting
 
-- You have created a database on [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) and have obtained a database connection string
+Network Topology & Security
 
-## Configuration
+API Documentation (OpenAPI/Swagger)
 
-- Create a Github project, and generate a personal access token (see doc [here](https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token))
+Cost & Usage Considerations
 
-- Create an [S3 bucket](https://www.terraform.io/docs/language/settings/backends/s3.html) to store Terraform state. Populate bucket name in `01-main.tf`
+1. Project Overview
+The GreenCloud Node.js API provides a backend service built with Express.js and Mongoose (for MongoDB interaction). It is designed to be highly scalable and maintainable, leveraging Google Cloud's serverless capabilities.
 
-- Create a secret on [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/) named `DockerHubAccessToken` with key `DOCKER_HUB_ACCESS_TOKEN`, and your [Docker access token](https://docs.docker.com/docker-hub/access-tokens/) as value
+Key Technologies:
 
-- Create a secret on [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/) named `MongoPassword` with key `MONGO_PASSWORD`, and your MongoDB password as value
+Backend: Node.js, Express.js, Mongoose
 
-- Populate `terraform.tfvars`:
+Database: MongoDB Atlas (cloud), MongoDB (local via Docker)
 
-```bash
-default_region            = "us-east-1"
-docker_username           = "matlau"
-github_username           = "MatthewCYLau"
-github_project_name       = "node-aws-fargate-terraform"
-app_name                  = "node-aws-fargate-app"
-environment               = "production"
-mongo_username            = "admin-matlau"
-mongo_host                = "mattewcylau-5ltcp.mongodb.net"
-mongo_database_name       = "node-aws-fargate-app"
-```
+Containerization: Docker
 
-## Deploy
+Cloud Platform: Google Cloud Platform (GCP)
 
-```bash
-cd deploy # change to deploy directory
-terraform init # initialises Terraform
-terraform apply # deploys AWS stack. See output for AWS loadbalancer DNS name
-terraform destroy # destroys AWS stack
-```
+Deployment: Google Cloud Run
 
-When prompted for `github_token`, provide the value and hit Return. Alternatively, create a [local environment variable](https://www.terraform.io/docs/language/values/variables.html#environment-variables) named `TF_VAR_github_token`
+CI/CD: Google Cloud Build
 
-## Usage
+Secrets Management: Google Secret Manager
 
-- Create a user by making `POST` request to `/api/users` with the following JSON body:
+Infrastructure as Code: Terraform
 
-```json
-{
-  "email": "jon@doe.com",
-  "password": "password",
-  "name": "jondoe"
-}
-```
+2. Local Development Setup
+To run the API locally using Docker Compose:
 
-- See Postman collection [here](https://www.getpostman.com/collections/471ace71d8c991681342)
+Prerequisites:
+Docker Desktop installed and running.
 
-## Contributing
+Node.js and npm (optional, for running outside Docker or specific local tasks).
 
-Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
+Steps:
+Clone the repository:
 
-Please make sure to update tests as appropriate.
+git clone https://github.com/nextgenhafeez/greencloud-nodejs-api.git
+cd greencloud-nodejs-api
 
-If you find this project helpful, please give a :star: or even better buy me a coffee :coffee: :point_down: because I'm a caffeine addict :sweat_smile:
+Review docker-compose.yml:
+This file defines your local Node.js app service and a local MongoDB service.
 
-<a href="https://www.buymeacoffee.com/matlau" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Coffee" style="height: 41px !important;width: 174px !important;box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;-webkit-box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;" ></a>
+docker-compose.yml (see docker-compose-final immersive)
 
-## License
+Note: The MONGO_PASSWORD and JWT_SECRET in docker-compose.yml are for local development only. Do NOT use production secrets here.
 
-[MIT](https://choosealicense.com/licenses/mit/)
+Ensure config/default.json is present:
+This file defines the local MongoDB URI and JWT secret used by your application when running locally.
+
+config/default.json (see config-default-json immersive)
+
+Install Node.js dependencies (inside the container via Dockerfile):
+The Dockerfile handles npm install during the build process.
+
+Build and run the services:
+From the root of this project, run:
+
+docker-compose up --build
+
+This will:
+
+Build your Node.js application's Docker image.
+
+Start the MongoDB container.
+
+Start your Node.js application container.
+
+Verify local application:
+Once docker-compose up completes, your API should be running locally.
+
+Access the test endpoint: http://localhost:8080/test
+
+You should see: "Hello from the API! (CI/CD should work now!)" (or your latest test message).
+
+Check your terminal logs for "MongoDB Connected..." from the app service.
+
+3. Cloud Deployment (Google Cloud Run)
+The application is deployed as a serverless container on Google Cloud Run.
+
+Key Service Details:
+Service Name: greencloud-nodejs-api-service
+
+Region: us-central1
+
+Public URL: https://greencloud-nodejs-api-service-wup63a4a5a-uc.a.run.app (This URL may change upon new deployments if not managed by a custom domain).
+
+Manual Deployment (for initial setup or debugging):
+While CI/CD is configured, you can manually deploy using gcloud if needed:
+
+Ensure Google Cloud SDK is configured and authenticated.
+
+Build the Docker image locally:
+
+docker build -t gcr.io/YOUR_PROJECT_ID/greencloud-nodejs-app:v1.0.1 .
+
+(Replace YOUR_PROJECT_ID with your actual GCP project ID).
+
+Push the image to Google Container Registry/Artifact Registry:
+
+docker push gcr.io/YOUR_PROJECT_ID/greencloud-nodejs-app:v1.0.1
+
+Deploy to Cloud Run:
+
+gcloud run deploy greencloud-nodejs-api-service \
+  --image gcr.io/YOUR_PROJECT_ID/greencloud-nodejs-app:v1.0.1 \
+  --region us-central1 \
+  --platform managed \
+  --allow-unauthenticated \
+  --port 8080 \
+  --set-env-vars MONGO_USERNAME=nextgenhafeez,MONGO_HOST=greencloud-nodejs-api-d.hbjkcdg.mongodb.net,MONGO_DB_NAME=node-aws-fargate-app,JWT_SECRET=YOUR_PROD_JWT_SECRET \
+  --set-secrets MONGO_PASSWORD=mongodb-password:latest \
+  --project YOUR_PROJECT_ID
+
+(Replace placeholders with your actual values).
+
+4. CI/CD Pipeline
+A Continuous Integration/Continuous Deployment (CI/CD) pipeline is set up using Google Cloud Build, triggered by pushes to the main branch of this GitHub repository.
+
+Configuration: The CI/CD steps are defined in cloudbuild.yaml (see cloudbuild-yaml-final-fix immersive).
+
+Flow:
+
+Code pushed to main branch on GitHub.
+
+Cloud Build trigger detects the push.
+
+Cloud Build executes cloudbuild.yaml:
+
+Builds a new Docker image.
+
+Pushes the image to Google Container Registry/Artifact Registry.
+
+Deploys the new image as a new revision to the greencloud-nodejs-api-service on Cloud Run.
+
+Monitoring Builds: You can monitor the status and logs of builds in the Google Cloud Build History page.
+
+5. Infrastructure-as-Code (Terraform)
+The Google Cloud Run service and its essential IAM permissions are defined as Infrastructure-as-Code using Terraform. This allows for version-controlled, repeatable, and declarative management of your cloud resources.
+
+Terraform Files:
+
+terraform/main.tf (see terraform-main-tf-ultimate-fix-v3 immersive)
+
+terraform/variables.tf (defines input variables)
+
+terraform/outputs.tf (defines output values like service URL)
+
+Usage:
+
+Navigate to the terraform/ directory.
+
+Initialize Terraform: terraform init (ensure your GCS backend bucket for state is configured and exists).
+
+Review the plan: terraform plan
+
+Apply changes: terraform apply
+
+Note: Ensure variables.tf (or a terraform.tfvars file) is correctly populated with your GCP project ID, region, and sensitive values like JWT_SECRET.
+
+6. Monitoring & Alerting
+Google Cloud provides robust monitoring and alerting capabilities for your Cloud Run service.
+
+Metrics & Dashboards:
+
+Access pre-built metrics (requests, latency, CPU/memory) for your Cloud Run service in the Cloud Run service details page.
+
+Create custom dashboards in Google Cloud Monitoring to combine various metrics.
+
+Logs:
+
+View application logs directly from the "Logs" tab on your Cloud Run service page or in Google Cloud Logging (Logs Explorer).
+
+Alerting:
+
+Set up alert policies in Google Cloud Monitoring to notify you of critical events (e.g., high error rates, high latency, low instance count).
+
+Example: An alert could be configured to trigger if the 5xx error rate for your service exceeds a certain threshold for a sustained period.
+
+7. Network Topology & Security
+For Cloud Run, network topology and security are largely managed by Google Cloud, providing a secure-by-default environment.
+
+Detailed Documentation: Refer to docs/Network_Security_CloudRun.md (see network-security-docs immersive) for a comprehensive explanation of how network topology and security are handled for this service.
+
+Key Aspects:
+
+Managed HTTPS endpoint, no direct VPC/subnet configuration.
+
+IAM-based access control (roles/run.invoker for public access).
+
+Secure Secret Manager integration for sensitive credentials.
+
+Recommendation for MongoDB Atlas IP Access List for enhanced database security.
+
+8. API Documentation (OpenAPI/Swagger)
+While a formal OpenAPI (Swagger) specification file (swagger.json or openapi.yaml) is not currently included in this repository, it is highly recommended for documenting your API's endpoints, request/response schemas, and authentication methods.
+
+Future Steps:
+
+Generate an OpenAPI specification from your Node.js application (e.g., using libraries like swagger-jsdoc or express-oas-generator).
+
+Host the Swagger UI to provide an interactive API documentation portal.
+
+9. Cost & Usage Considerations
+Cloud Run is a pay-per-use serverless service, which means you only pay for the resources consumed while your application is actively processing requests.
+
+Billing Reports: Monitor your costs in Google Cloud Billing Reports. You can filter by service (Cloud Run, Cloud Build, Secret Manager, etc.) to understand your spending patterns.
+
+Rightsizing for Cloud Run:
+
+CPU & Memory Limits: Set these to the minimum required for optimal performance. Monitor actual usage in Cloud Monitoring and adjust limits (cpu, memory in main.tf) if over-provisioned.
+
+Max Instances: The current max_instance_count = 5 in Terraform is a reasonable cap. Adjust based on expected peak load to control costs during unexpected traffic bursts.
+
+Concurrency: Optimize your application to handle multiple concurrent requests per instance efficiently.
+
+Cold Starts: Optimize application startup time to minimize CPU allocation during cold starts.
+
+Free Tier: Leverage Cloud Run's generous free tier for initial development and low-traffic applications.
